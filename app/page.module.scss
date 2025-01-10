@@ -1,0 +1,14 @@
+.main {
+  .section {
+    .container {
+      .dynamicInput {
+        input {
+          padding-right: 2.5rem;
+          &::placeholder {
+            margin-right: -20px;
+          }
+        }
+      }
+    }
+  }
+}
