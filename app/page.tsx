@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import Dinero from 'dinero.js'
 import { useState } from 'react'
 import Button from './components/buttons/Button'
+//ginport dans composant pour la gestion des erreurs
 import ErrorMessage from './components/errors/ErrorMessage'
 import { Section } from './components/section/Section'
 import style from './page.module.scss'
@@ -21,7 +22,7 @@ export default function Home() {
 
   // const [tvaDescription, setTvaDescription] = useState('');
 
-  // Determine le label dynamique selon le type de calcul
+  //selectionentre les options
   const getDynamicLabel = () => {
     switch (calculationType) {
       case 'coefficient':
@@ -35,7 +36,7 @@ export default function Home() {
     }
   }
 
-  //message d'advertisement
+  //messages d'advertisement pour qynmicInput et purchacePrice
   const validateInputs = () => {
     let isValid = true
 
@@ -50,10 +51,10 @@ export default function Home() {
       )
       isValid = false
     } else {
-      setPurchasePriceError('') // Limpiar el error si la validación pasa
+      setPurchasePriceError('')
     }
 
-    // Validar el campo dinámico
+    //pour qynmicInput
     if (!parsedDynamicInput || parsedDynamicInput <= 0) {
       let errorMessage = ''
       switch (calculationType) {
@@ -72,7 +73,7 @@ export default function Home() {
       setDynamicInputError(errorMessage)
       isValid = false
     } else {
-      setDynamicInputError('') // Limpiar el error si la validación pasa
+      setDynamicInputError('')
     }
 
     return isValid
@@ -83,7 +84,7 @@ export default function Home() {
 
     const parsedPurchasePrice = parseFloat(purchasePrice.replace(',', '.'))
     const parsedDynamicInput = parseFloat(dynamicInput.replace(',', '.'))
-
+    //attention cete code marche avec dinero.js pour arrondir les dicimales
     const purchasePriceDinero = Dinero({
       amount: Math.round(parsedPurchasePrice * 100),
     })
@@ -121,6 +122,7 @@ export default function Home() {
         (margin.getAmount() / purchasePriceDinero.getAmount()) * 100 * 100,
       ) / 100
 
+    //innerHTML pour les resultats
     const calculatedResult = `<p>Prix d'achat HT : <span class='font-bold text-primary'>${(purchasePriceDinero.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
   <p>Prix de vente HT : <span class='font-bold text-primary'>${(sellingPriceHT.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
   <p>Prix de vente TTC : <span class='font-bold text-primary'>${(sellingPriceTTC.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
