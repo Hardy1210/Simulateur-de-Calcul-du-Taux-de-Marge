@@ -111,6 +111,9 @@ export default function Home() {
       margin = sellingPriceHT.subtract(purchasePriceDinero)
     }
 
+    // Calcul du montant de la TVA
+    const tvaAmount = sellingPriceTTC.subtract(sellingPriceHT)
+
     const coefficientTTC =
       sellingPriceTTC.getAmount() / purchasePriceDinero.getAmount()
     const marginRate =
@@ -121,6 +124,7 @@ export default function Home() {
     const calculatedResult = `<p>Prix d'achat HT : <span class='font-bold text-primary'>${(purchasePriceDinero.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
   <p>Prix de vente HT : <span class='font-bold text-primary'>${(sellingPriceHT.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
   <p>Prix de vente TTC : <span class='font-bold text-primary'>${(sellingPriceTTC.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+  <p>Montant de la TVA : <span class='font-bold text-primary'>${(tvaAmount.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
   <p>Marge : <span class='font-bold text-primary'>${(margin.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
   <p>Coefficient (TTC) : <span class='font-bold text-primary'>${coefficientTTC.toFixed(2)}</span></p>
   <p>Taux de marge (%) : <span class='font-bold text-primary'>${marginRate.toFixed(2)}</span><span class='font-bold'> %</span></p>`
