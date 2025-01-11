@@ -13,8 +13,8 @@ export default function Home() {
   const [calculationType, setCalculationType] = useState<string>('coefficient')
   const [tva, setTva] = useState<number>(20)
   const [tvaLabel, setTvaLabel] = useState<string>('') //Valor visual
-  const [purchasePrice, setPurchasePrice] = useState<number | ''>('') // prix d'achat HT
-  const [dynamicInput, setDynamicInput] = useState<number | ''>('') //champ dynamique (taux de marge ou Coefficient)
+  const [purchasePrice, setPurchasePrice] = useState<string>('') // prix d'achat HT
+  const [dynamicInput, setDynamicInput] = useState<string>('') //champ dynamique (taux de marge ou Coefficient)
   const [result, setResult] = useState<string>('')
   const [purchasePriceError, setPurchasePriceError] = useState<string>('') //Error de purchasePrice
   const [dynamicInputError, setDynamicInputError] = useState<string>('') //error de dynamicInput
@@ -39,20 +39,22 @@ export default function Home() {
   const validateInputs = () => {
     let isValid = true
 
-    // Validation du prix d'achat
-    if (!purchasePrice || purchasePrice <= 0) {
+    // Convertimos el precio ingresado para validación
+    const parsedPurchasePrice = parseFloat(purchasePrice.replace(',', '.'))
+    const parsedDynamicInput = parseFloat(dynamicInput.replace(',', '.'))
+
+    // Validar el precio de compra
+    if (!parsedPurchasePrice || parsedPurchasePrice <= 0) {
       setPurchasePriceError(
         "Veuillez entrer une valeur valide pour le Prix d'achat HT.",
       )
       isValid = false
     } else {
-      setPurchasePriceError('')
+      setPurchasePriceError('') // Limpiar el error si la validación pasa
     }
 
-    // Validación input dinamque calculationType en fonction de choix pou calculationType
-    //tu pourra trouver le composant qui gere les erreurs
-    //dans les composasnt avec les dossier errors
-    if (!dynamicInput || dynamicInput <= 0) {
+    // Validar el campo dinámico
+    if (!parsedDynamicInput || parsedDynamicInput <= 0) {
       let errorMessage = ''
       switch (calculationType) {
         case 'coefficient':
@@ -70,7 +72,7 @@ export default function Home() {
       setDynamicInputError(errorMessage)
       isValid = false
     } else {
-      setDynamicInputError('')
+      setDynamicInputError('') // Limpiar el error si la validación pasa
     }
 
     return isValid
@@ -78,24 +80,23 @@ export default function Home() {
 
   const calculate = () => {
     if (!validateInputs()) return
-    //attention ! il faut installer dinero js
+
+    const parsedPurchasePrice = parseFloat(purchasePrice.replace(',', '.'))
+    const parsedDynamicInput = parseFloat(dynamicInput.replace(',', '.'))
+
     const purchasePriceDinero = Dinero({
-      amount: Math.round(
-        (typeof purchasePrice === 'number' ? purchasePrice : 0) * 100,
-      ),
+      amount: Math.round(parsedPurchasePrice * 100),
     })
     const dynamicInputDinero = Dinero({
-      amount: Math.round((dynamicInput || 0) * 100),
+      amount: Math.round(parsedDynamicInput * 100),
     })
 
     let sellingPriceHT = Dinero({ amount: 0 })
     let sellingPriceTTC = Dinero({ amount: 0 })
     let margin = Dinero({ amount: 0 })
-    //logique de calcule et combinaison avec taux de marge
+
     if (calculationType === 'coefficient') {
-      sellingPriceHT = purchasePriceDinero.multiply(
-        typeof dynamicInput === 'number' ? dynamicInput : 0,
-      )
+      sellingPriceHT = purchasePriceDinero.multiply(parsedDynamicInput)
       sellingPriceTTC = sellingPriceHT.multiply(1 + tva / 100)
       margin = sellingPriceHT.subtract(purchasePriceDinero)
     } else if (calculationType === 'prix-vente-ttc') {
@@ -104,7 +105,7 @@ export default function Home() {
       margin = sellingPriceHT.subtract(purchasePriceDinero)
     } else if (calculationType === 'taux-marge') {
       sellingPriceHT = purchasePriceDinero.multiply(
-        1 + (typeof dynamicInput === 'number' ? dynamicInput / 100 : 0),
+        1 + parsedDynamicInput / 100,
       )
       sellingPriceTTC = sellingPriceHT.multiply(1 + tva / 100)
       margin = sellingPriceHT.subtract(purchasePriceDinero)
@@ -116,16 +117,17 @@ export default function Home() {
       Math.floor(
         (margin.getAmount() / purchasePriceDinero.getAmount()) * 100 * 100,
       ) / 100
-    // on av renderiser avec un inner html
+
     const calculatedResult = `<p>Prix d'achat HT : <span class='font-bold text-primary'>${(purchasePriceDinero.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
-    <p>Prix de vente HT : <span class='font-bold text-primary'>${(sellingPriceHT.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
-    <p>Prix de vente TTC : <span class='font-bold text-primary'>${(sellingPriceTTC.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
-    <p>Marge : <span class='font-bold text-primary'>${(margin.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
-    <p>Coefficient (TTC) : <span class='font-bold text-primary'>${coefficientTTC.toFixed(2)}</span></p>
-    <p>Taux de marge (%) : <span class='font-bold text-primary'>${marginRate.toFixed(2)}</span><span class='font-bold'> %</span></p>`
+  <p>Prix de vente HT : <span class='font-bold text-primary'>${(sellingPriceHT.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+  <p>Prix de vente TTC : <span class='font-bold text-primary'>${(sellingPriceTTC.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+  <p>Marge : <span class='font-bold text-primary'>${(margin.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+  <p>Coefficient (TTC) : <span class='font-bold text-primary'>${coefficientTTC.toFixed(2)}</span></p>
+  <p>Taux de marge (%) : <span class='font-bold text-primary'>${marginRate.toFixed(2)}</span><span class='font-bold'> %</span></p>`
 
     setResult(calculatedResult)
   }
+
   return (
     <>
       <main className={cn(style.main, 'my-10')}>
@@ -159,9 +161,20 @@ export default function Home() {
                 className="pr-5 w-full h-12 border border-neutral-400/50 rounded-sm text-right"
                 onChange={(e) => {
                   const value = e.target.value
-                  setPurchasePrice(
-                    value ? parseFloat(value.replace(',', '.')) || '' : '',
-                  )
+                  // Sanitize input: accept commas and digits only
+                  const sanitizedValue = value.replace(/[^0-9.,]/g, '')
+
+                  setPurchasePrice(sanitizedValue)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    // Convertir la valeur en nombre ou initialiser à 0 si vide
+                    let currentValue =
+                      parseFloat(purchasePrice.replace(',', '.')) || 0
+                    currentValue += e.key === 'ArrowUp' ? 0.01 : -0.01
+                    setPurchasePrice(currentValue.toFixed(2).replace('.', ',')) // Retour au format avec virgule
+                  }
                 }}
                 placeholder="€"
               />
@@ -203,9 +216,19 @@ export default function Home() {
                 value={dynamicInput}
                 onChange={(e) => {
                   const value = e.target.value
-                  setDynamicInput(
-                    value ? parseFloat(value.replace(',', '.')) || '' : '',
-                  )
+                  // Accepter la virgule et les chiffres uniquement
+                  const sanitizedValue = value.replace(/[^0-9.,]/g, '')
+                  setDynamicInput(sanitizedValue)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    // Convertir la valeur en nombre ou initialiser à 0 si vide
+                    let currentValue =
+                      parseFloat(dynamicInput.replace(',', '.')) || 0
+                    currentValue += e.key === 'ArrowUp' ? 0.01 : -0.01
+                    setDynamicInput(currentValue.toFixed(2).replace('.', ',')) // Retour au format avec virgule
+                  }
                 }}
                 placeholder={
                   calculationType === 'coefficient'
