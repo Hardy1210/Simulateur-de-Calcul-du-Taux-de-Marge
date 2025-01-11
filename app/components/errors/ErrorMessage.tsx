@@ -10,9 +10,9 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ messages }) => {
   if (messages.length === 0) return null
 
   return (
-    <div className={cn('p-4 border rounded-md shadow-md bg-red-100')}>
+    <div className={cn('p-3 border rounded-md shadow-md bg-red-100')}>
       {messages.map((message, index) => (
-        <p key={index} className="text-red-700 text-sm">
+        <p key={index} className="text-red-700 text-xs">
           {message}
         </p>
       ))}

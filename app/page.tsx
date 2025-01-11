@@ -12,16 +12,16 @@ export default function Home() {
   // États
   const [calculationType, setCalculationType] = useState<string>('coefficient')
   const [tva, setTva] = useState<number>(20)
-  const [tvaLabel, setTvaLabel] = useState<string>('') // Valor visual
-  const [purchasePrice, setPurchasePrice] = useState<number | ''>('') // Prix d'achat HT
-  const [dynamicInput, setDynamicInput] = useState<number | ''>('') // Champ dynamique (ex. Taux de marge ou Coefficient)
+  const [tvaLabel, setTvaLabel] = useState<string>('') //Valor visual
+  const [purchasePrice, setPurchasePrice] = useState<number | ''>('') // prix d'achat HT
+  const [dynamicInput, setDynamicInput] = useState<number | ''>('') //champ dynamique (taux de marge ou Coefficient)
   const [result, setResult] = useState<string>('')
-  const [purchasePriceError, setPurchasePriceError] = useState<string>('') // Error de purchasePrice
-  const [dynamicInputError, setDynamicInputError] = useState<string>('') // Error de dynamicInput
+  const [purchasePriceError, setPurchasePriceError] = useState<string>('') //Error de purchasePrice
+  const [dynamicInputError, setDynamicInputError] = useState<string>('') //error de dynamicInput
 
   // const [tvaDescription, setTvaDescription] = useState('');
 
-  // Détermine le label dynamique selon le type de calcul
+  // Determine le label dynamique selon le type de calcul
   const getDynamicLabel = () => {
     switch (calculationType) {
       case 'coefficient':
@@ -35,9 +35,11 @@ export default function Home() {
     }
   }
 
+  //message d'advertisement
   const validateInputs = () => {
     let isValid = true
 
+    // Validation du prix d'achat
     if (!purchasePrice || purchasePrice <= 0) {
       setPurchasePriceError(
         "Veuillez entrer une valeur valide pour le Prix d'achat HT.",
@@ -47,10 +49,25 @@ export default function Home() {
       setPurchasePriceError('')
     }
 
+    // Validación input dinamque calculationType en fonction de choix pou calculationType
+    //tu pourra trouver le composant qui gere les erreurs
+    //dans les composasnt avec les dossier errors
     if (!dynamicInput || dynamicInput <= 0) {
-      setDynamicInputError(
-        'Veuillez entrer une valeur valide pour le champ dynamique.',
-      )
+      let errorMessage = ''
+      switch (calculationType) {
+        case 'coefficient':
+          errorMessage = 'Veuillez entrer un coefficient valide.'
+          break
+        case 'prix-vente-ttc':
+          errorMessage = 'Veuillez entrer un prix de vente TTC valide.'
+          break
+        case 'taux-marge':
+          errorMessage = 'Veuillez entrer un taux de marge valide.'
+          break
+        default:
+          errorMessage = 'Veuillez entrer une valeur valide.'
+      }
+      setDynamicInputError(errorMessage)
       isValid = false
     } else {
       setDynamicInputError('')
@@ -61,7 +78,7 @@ export default function Home() {
 
   const calculate = () => {
     if (!validateInputs()) return
-
+    //attention ! il faut installer dinero js
     const purchasePriceDinero = Dinero({
       amount: Math.round(
         (typeof purchasePrice === 'number' ? purchasePrice : 0) * 100,
@@ -74,7 +91,7 @@ export default function Home() {
     let sellingPriceHT = Dinero({ amount: 0 })
     let sellingPriceTTC = Dinero({ amount: 0 })
     let margin = Dinero({ amount: 0 })
-
+    //logique de calcule et combinaison avec taux de marge
     if (calculationType === 'coefficient') {
       sellingPriceHT = purchasePriceDinero.multiply(
         typeof dynamicInput === 'number' ? dynamicInput : 0,
@@ -99,22 +116,30 @@ export default function Home() {
       Math.floor(
         (margin.getAmount() / purchasePriceDinero.getAmount()) * 100 * 100,
       ) / 100
-
-    const calculatedResult = `Prix d'achat HT : ${(purchasePriceDinero.getAmount() / 100).toFixed(2)} €<br>
-    Prix de vente HT : ${(sellingPriceHT.getAmount() / 100).toFixed(2)} €<br>
-    Prix de vente TTC : ${(sellingPriceTTC.getAmount() / 100).toFixed(2)} €<br>
-    Marge : ${(margin.getAmount() / 100).toFixed(2)} €<br>
-    Coefficient (TTC) : ${coefficientTTC.toFixed(2)}<br>
-    Taux de marge (%) : ${marginRate.toFixed(2)}%<br>`
+    // on av renderiser avec un inner html
+    const calculatedResult = `<p>Prix d'achat HT : <span class='font-bold text-primary'>${(purchasePriceDinero.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+    <p>Prix de vente HT : <span class='font-bold text-primary'>${(sellingPriceHT.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+    <p>Prix de vente TTC : <span class='font-bold text-primary'>${(sellingPriceTTC.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+    <p>Marge : <span class='font-bold text-primary'>${(margin.getAmount() / 100).toFixed(2)}</span> <span class='font-bold'>€</span></p>
+    <p>Coefficient (TTC) : <span class='font-bold text-primary'>${coefficientTTC.toFixed(2)}</span></p>
+    <p>Taux de marge (%) : <span class='font-bold text-primary'>${marginRate.toFixed(2)}</span><span class='font-bold'> %</span></p>`
 
     setResult(calculatedResult)
   }
   return (
     <>
       <main className={cn(style.main, 'my-10')}>
-        <Section className={cn(style.section, 'flex flex-col gap-4 px-5 ')}>
+        <Section
+          className={cn(
+            style.section,
+            'flex flex-col gap-4 px-5 items-center ',
+          )}
+        >
           <div
-            className={cn(style.container, 'p-10 border rounded-md shadow-md')}
+            className={cn(
+              style.container,
+              'p-10 max-w-xl border rounded-md shadow-md',
+            )}
           >
             <h1 className="text-center text-xl md:text-2xl mb-10">
               Simulateur de Calcul du Taux de Marge
@@ -199,11 +224,15 @@ export default function Home() {
               <label htmlFor="tva">
                 TVA<span className="text-red-600">*</span> :
               </label>
+              {/*important les value pour les diferencier alors ils falle les transformés en string
+                 mapping pour pouvoir retransforme les strings a value number */}
               <select
                 id="tva"
                 value={tvaLabel}
                 className="w-full h-12 border border-neutral-400/50 rounded-sm text-center"
                 onChange={(e) => {
+                  //important les value pour les diferencier alors ils falle les transformés en string
+                  //mapping pour pouvoir retransforme les strings a value number
                   const mapping: Record<
                     string,
                     { value: number; label: string }
@@ -280,7 +309,10 @@ export default function Home() {
 
           {result && (
             <div
-              className="p-10 border rounded-md shadow-md"
+              className={cn(
+                style.innerHTML,
+                'p-10 border rounded-md shadow-md',
+              )}
               dangerouslySetInnerHTML={{ __html: result }}
             />
           )}
